@@ -1,0 +1,14 @@
+.pagina-nao-encontrada {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.pagina-nao-encontrada h1 {
+  font-size: 24px;
+  color: #333;
+}
+
+.pagina-nao-encontrada p {
+  font-size: 16px;
+  color: #666;
+}
