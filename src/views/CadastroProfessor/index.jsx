@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
+import io from 'socket.io-client';
+
 
 const CadastroProfessor = () => {
   const [teacher, setTeacher] = useState({
     nome: '',
     matricula: '',
-    uid: ''
   });
-
+  const [uid, setUid] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    // Recebe dados do servidor
+    const socket = io(`http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}`, { withCredentials: true, });
+    
+    socket.on('rfid', data => {
+      setUid(data);
+    });
+    // // Limpa o listener quando o componente é desmontado
+    return () => {
+      socket.off('rfid');
+    };
+  }, []);  
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -30,7 +44,7 @@ const CadastroProfessor = () => {
           headers: {
             'Content-Type': 'application/json' // Definir o cabeçalho Content-Type como application/json
           },
-          body: JSON.stringify(teacher) // Converter o objeto teacher em uma string JSON
+          body: JSON.stringify({...teacher, uid}) // Converter o objeto teacher em uma string JSON
         });
 
       if(!resposta.ok) {
@@ -42,8 +56,8 @@ const CadastroProfessor = () => {
       setTeacher({
         nome: '',
         matricula: '',
-        uid: ''
       });
+      setUid('');
       setSuccess('Professor cadastrado com sucesso!');        
     }catch (error){
       setError(error.message || 'Aconteceu algum erro no cadastro do professor');
@@ -88,10 +102,10 @@ const CadastroProfessor = () => {
           id="uid"
           name="uid"
           required
-          //disabled
+          disabled
           placeholder="Aproxime o RFID do leitor"
-          value={teacher.uid}
-          onChange={handleChange}
+          value={uid}
+          //onChange={handleChange}
         />
       </div>
       <button type="submit" className="btn btn-primary mt-5">Cadastrar</button>

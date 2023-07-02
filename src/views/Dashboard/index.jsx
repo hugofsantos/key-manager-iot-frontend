@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import io from 'socket.io-client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './dashboards.css';
 
@@ -26,7 +27,6 @@ const Dashboard = () => {
         const { horarioEmprestimo, sala, professor: { nome } } = emprestimo;
 
         const newRoomsData = roomsData.map(roomData => {
-          console.log(roomData.room, sala);
           if (roomData.room === sala) {
             roomData.status = 'Ocupada';
             roomData.borrower = nome;
@@ -35,7 +35,6 @@ const Dashboard = () => {
 
           return roomData;
         })
-        console.log(newRoomsData);
         setRoomsData(newRoomsData);
       });
     }catch(error) {
@@ -44,7 +43,41 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchEmprestimos();
+    fetchEmprestimos(); // Busca últimos empréstimos
+
+    // Recebe dados do servidor
+    const socket = io(`http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}`, { withCredentials: true, });
+
+    socket.on('liberar', data => {
+      const { horarioEmprestimo, sala, professor: { nome } } = data;
+
+      const newRoomsData = roomsData.map(roomData => {
+        if (roomData.room === sala) {
+          roomData.status = 'Ocupada';
+          roomData.borrower = nome;
+          roomData.time = new Date(horarioEmprestimo).toLocaleString('pt-BR');
+        }
+
+        return roomData;
+      })
+      setRoomsData(newRoomsData);
+    });
+
+    socket.on('trancar', data => {
+      const roomIndex = roomsData.findIndex(room => room.room === data);
+
+      if(roomIndex >= 0) {
+        roomsData[roomIndex].status = 'Disponível';
+
+        setRoomsData(roomsData);
+      }
+    });
+
+    // Limpa o listener quando o componente é desmontado
+    return () => {
+      socket.off('liberar');
+      socket.off('trancar');
+    };    
   }, []);
 
 
