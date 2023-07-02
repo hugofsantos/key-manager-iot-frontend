@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Alert } from 'react-bootstrap';
 
 const CadastroProfessor = () => {
   const [teacher, setTeacher] = useState({
@@ -6,6 +7,9 @@ const CadastroProfessor = () => {
     matricula: '',
     uid: ''
   });
+
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -20,29 +24,37 @@ const CadastroProfessor = () => {
     event.preventDefault();
     
     try{
-      await fetch(`http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}/professor`, 
+      const resposta = await fetch(`http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}/professor`, 
         { 
           method: 'POST',
           headers: {
             'Content-Type': 'application/json' // Definir o cabeçalho Content-Type como application/json
           },
           body: JSON.stringify(teacher) // Converter o objeto teacher em uma string JSON
-        },
+        });
 
-        setTeacher({
-          nome: '',
-          matricula: '',
-          uid: ''
-        })
-      );
+      if(!resposta.ok) {
+        const erroRespota = await resposta.json();
+
+        throw erroRespota;
+      }
+
+      setTeacher({
+        nome: '',
+        matricula: '',
+        uid: ''
+      });
+      setSuccess('Professor cadastrado com sucesso!');        
     }catch (error){
-      console.error(error.message); 
+      setError(error.message || 'Aconteceu algum erro no cadastro do professor');
+      setSuccess('');
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="container-fluid">
-      <div className="form-group">
+      <h2 className="mt-5">Cadastro de Professores</h2>
+      <div className="form-group mt-5">
         <label htmlFor="nome">Nome completo:</label>
         <input
           type="text"
@@ -83,6 +95,8 @@ const CadastroProfessor = () => {
         />
       </div>
       <button type="submit" className="btn btn-primary mt-5">Cadastrar</button>
+      {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+      {success && <Alert variant="success" className="mt-3">{success}</Alert>}
     </form>
   );
 };
