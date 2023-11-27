@@ -14,7 +14,7 @@ const CadastroProfessor = () => {
 
   useEffect(() => {
     // Recebe dados do servidor
-    const socket = io(`http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}`, { withCredentials: true, });
+    const socket = io(`http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}`, {withCredentials: false});
     
     socket.on('rfid', data => {
       setUid(data);
