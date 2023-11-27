@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './dashboards.css';
+import { useSocketIo } from '../../network/websocket';
 
 const Dashboard = () => {
   const [roomsData, setRoomsData] = useState([
@@ -46,7 +46,7 @@ const Dashboard = () => {
     fetchEmprestimos(); // Busca últimos empréstimos
 
     // Recebe dados do servidor
-    const socket = io(`http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}`, { withCredentials: false });
+    const socket = useSocketIo();
 
     socket.on('liberar', data => {
       const { horarioEmprestimo, sala, professor: { nome } } = data;

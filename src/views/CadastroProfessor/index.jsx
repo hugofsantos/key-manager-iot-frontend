@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
-import io from 'socket.io-client';
+import { useSocketIo } from '../../network/websocket';
 
 
 const CadastroProfessor = () => {
@@ -14,11 +14,12 @@ const CadastroProfessor = () => {
 
   useEffect(() => {
     // Recebe dados do servidor
-    const socket = io(`http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}`, {withCredentials: false});
+    const socket = useSocketIo('');
     
     socket.on('rfid', data => {
       setUid(data);
     });
+    
     // // Limpa o listener quando o componente é desmontado
     return () => {
       socket.off('rfid');
