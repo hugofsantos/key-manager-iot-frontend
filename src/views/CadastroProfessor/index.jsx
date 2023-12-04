@@ -16,13 +16,13 @@ const CadastroProfessor = () => {
     // Recebe dados do servidor
     const socket = useSocketIo('');
     
-    socket.on('rfid', data => {
+    socket.on('cadastrar', data => {
       setUid(data);
     });
     
     // // Limpa o listener quando o componente é desmontado
     return () => {
-      socket.off('rfid');
+      socket.off('cadastrar');
     };
   }, []);  
 
