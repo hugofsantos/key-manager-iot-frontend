@@ -32,7 +32,7 @@ const Dashboard = () => {
             roomData.borrower = nome;
             roomData.time = new Date(horarioEmprestimo).toLocaleString('pt-BR');
           }
-          roomData.request = null;
+
           return roomData;
         })
         setRoomsData(newRoomsData);
@@ -48,21 +48,6 @@ const Dashboard = () => {
       const uri = `http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}/emprestimos/${route}?room=${room.room}`;  
 
       await fetch(uri, {method: 'PUT'});
-
-      setRoomsData(prevRoomsData => {
-        const roomIndex = prevRoomsData.findIndex(r => r.room === room.room);
-
-        if (roomIndex >= 0) {
-          const updatedRoomsData = [...prevRoomsData];
-          const newRoom = structuredClone(room);
-          newRoom.request = null;
-          newRoom.status = newRoom.status === 'Ocupada' ? 'Disponível' : 'Ocupada';
-          updatedRoomsData[roomIndex] = newRoom;
-
-          return updatedRoomsData;
-        }
-        return prevRoomsData;
-      });
     } catch (error) {
      console.error(error.message); 
     }
@@ -100,34 +85,41 @@ const Dashboard = () => {
     socket.on('retirada', data => {
       const { horarioEmprestimo, sala, professor: { nome } } = data;
 
-      const updatedRoomsData = roomsData.map(roomData => {
-        if (roomData.room === sala) {
-          return {
-            ...roomData,
-            status: 'Ocupada',
+      setRoomsData(prevRoomsData => {
+        const roomIndex = prevRoomsData.findIndex(room => room.room === data.sala);
+
+        if (roomIndex >= 0) {
+          const updatedRoomsData = [...prevRoomsData];
+          updatedRoomsData[roomIndex] = {
+            ...updatedRoomsData[roomIndex],
             borrower: nome,
+            status: 'Ocupada',
+            request: null,
             time: new Date(horarioEmprestimo).toLocaleString('pt-BR'),
           };
+          return updatedRoomsData;
         }
-        return roomData;
-      });
 
-      setRoomsData(updatedRoomsData);
+        return prevRoomsData;
+      });
     });
 
     // Para o evento 'devolucao' do WebSocket
     socket.on('devolucao', data => {
       setRoomsData(prevRoomsData => {
-        const updatedRoomsData = prevRoomsData.map(room => {
-          if (room.room === data) {
-            return {
-              ...room,
-              status: 'Disponível',
-            };
-          }
-          return room;
-        });
-        return updatedRoomsData;
+        const roomIndex = prevRoomsData.findIndex(room => room.room === data.sala);
+
+        if (roomIndex >= 0) {
+          const updatedRoomsData = [...prevRoomsData];
+          updatedRoomsData[roomIndex] = {
+            ...updatedRoomsData[roomIndex],
+            status: 'Disponível',
+            request: null,
+          };
+          return updatedRoomsData;
+        }
+
+        return prevRoomsData;
       });
     });
 
